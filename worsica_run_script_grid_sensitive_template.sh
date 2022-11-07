@@ -1,0 +1,2 @@
+WDV_USER_PWD=user:pwd
+NEXTCLOUD_URL="..."

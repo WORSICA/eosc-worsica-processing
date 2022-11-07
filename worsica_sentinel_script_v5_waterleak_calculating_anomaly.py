@@ -1,0 +1,86 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+
+"""
+worsica script for edge detection using opencv
+Author: rjmartins
+
+Script to run all the image processing,
+This does not include running the topo-bath image generation
+since it is only once made and should be manually done.
+
+Args:
+>1) ZIPFILE is the imagesets name to merge separated by comma
+>2) MERGEDNAME is a name for output merged file
+
+Usage: ./worsica_sentinel_script_v5_merging.py  [ZIPFILE] [MERGEDNAME]
+e.g: ./worsica_sentinel_script_v5_merging.py  S2A_MSIL2A_20181229T113501_N0211_R080_T29SMC_20181229T124502,S2A_MSIL2A_20181229T113501_N0211_R080_T29SMD_20181229T124502 merged_resampled_imagesets_2018_12_29
+"""
+
+import sys
+import os
+
+import worsica_leakdetection
+
+import traceback
+from shutil import copyfile
+
+WORKSPACE_PATH = '.'
+SCRIPT_PATH = '/usr/local/worsica_web_products'
+
+
+def run_script(args):
+    '''
+    run all the image processing
+    '''
+    # resample
+    try:
+        print(WORKSPACE_PATH)
+        print('---------------------------------------------')
+        print('-- 1) Calculate anomaly using imageset ' +
+              args[1] + ' and climatology ' + args[2] + ' (' + args[3] + ') --')
+        print('---------------------------------------------')
+        waterIndexes = args[3].split(',')
+        # create folder
+        os.makedirs(WORKSPACE_PATH + '/' + args[4], exist_ok=True)
+        # ./merged_resampled_xxxxxxxxx/merged_resampled_xxxxxxxxx_wi.tif
+        # ./climatology_0109/climatology_0109_wi.tif
+        for wi in waterIndexes:
+            worsica_leakdetection.calculate_water_leak_anomaly(
+                WORKSPACE_PATH + '/' + args[1] + '/' + args[1] + '_' + wi + '.tif',
+                WORKSPACE_PATH + '/' + args[2] + '/' + args[2] + '_' + wi + '.tif',
+                WORKSPACE_PATH + '/' + args[4])
+            copyfile(
+                WORKSPACE_PATH +
+                '/' +
+                args[1] +
+                '/' +
+                args[1] +
+                '_' +
+                wi +
+                '.tif',
+                WORKSPACE_PATH +
+                '/' +
+                args[4] +
+                '/' +
+                args[1] +
+                '_' +
+                wi +
+                '.tif')
+        # ./ldYYY/merged_resampled_xxxxxxxxx_wi.tif
+
+    except BaseException:
+        traceback.print_exc()
+        exit(1)
+
+
+if __name__ == '__main__':
+    print(sys.argv)
+    if len(sys.argv) != 5:
+        print(
+            "Usage: ./worsica_sentinel_script_v5_waterleak_calculating_anomaly.py [MERGED_IMAGESET_NAME] [AVG_IMAGE_NAME] [WATER_INDEX] [LD_IMAGE_NAME]")
+        exit(1)
+    else:
+        run_script(sys.argv)
+        exit(0)

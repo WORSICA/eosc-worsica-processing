@@ -1,0 +1,84 @@
+#DOCKER BACKEND
+FROM worsica/worsica-essentials:development
+MAINTAINER Ricardo Martins <rjmartins@lnec.pt>
+#build manually requirements file instead of importing it from the host or from git repository.
+
+ENV SEN2COR_VERSION 2.10.0
+ENV SEN2COR_EXT_VERSION 02.10.01
+ENV GOOGLE_CLOUD_VERSION 1.37.1
+ENV NETCDF4_VERSION 1.5.8
+   
+#Install GDAL for geodjango on portal and binaries for processing
+#GDAL from fedora repository and directly from pip with no compilation
+#Stick to only install a version of GDAL, to avoid problems with updates
+#Numpy from pip requirements must be installed first before gdal (import error no module named _gdal_array)
+RUN cd $HOME \
+    && yum install -y gdal-${GDAL_VERSION} gdal-devel-${GDAL_VERSION} gcc-c++ gzip which postgresql-devel \
+    && echo -e " \
+        opencv-python==${OPENCV_VERSION} \n\
+	protobuf==3.19.4 \n\
+        GDAL==${GDAL_VERSION} \n\
+	google-cloud-storage==${GOOGLE_CLOUD_VERSION} \n\
+	scikit-image==${SCIKIT_IMAGE_VERSION} \n\
+	psycopg2==2.8.4 \n\
+	dea-tools==0.2.5 \n\
+	rasterstats==0.16.0 \n\
+	geopy==2.2.0" >> requirements-backend-pip.txt \
+    && $HOME/worsica_web-py363_venv/bin/pip3 install --no-cache-dir -r requirements-backend-pip.txt \
+    && mkdir worsica_web_products
+
+#install sen2cor for conversion/atmospheric correction
+RUN cd $HOME \
+    && yum install -y file \
+    && curl -O http://step.esa.int/thirdparties/sen2cor/${SEN2COR_VERSION}/Sen2Cor-${SEN2COR_EXT_VERSION}-Linux64.run \
+    && chmod +x Sen2Cor-${SEN2COR_EXT_VERSION}-Linux64.run \
+    && ./Sen2Cor-${SEN2COR_EXT_VERSION}-Linux64.run \
+    && rm ./Sen2Cor-${SEN2COR_EXT_VERSION}-Linux64.run
+
+#set the path enviroment variable and the cwd
+ENV PATH /usr/local/worsica_web-py363_venv/bin:/usr/local/Sen2Cor-${SEN2COR_EXT_VERSION}-Linux64/bin:${PATH}
+
+#Requesitos do script worsica_Flood2Topo.py
+#usar 7z porque unzip nao consegue extrair o zip por considerar possível zip bomb   
+RUN cd $HOME \
+#    && yum install -y git cmake netcdf-devel p7zip p7zip-plugins \
+#    && git clone --recurse-submodules https://github.com/CNES/aviso-fes.git \
+#    && cd aviso-fes \
+#    && mkdir build \
+#    && cd build \    
+#    && cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/bin/FES2014 -DBUILD_PYTHON=yes -DPYTHON_LIBRARY=/usr/local/pythonz/pythons/CPython-3.6.3/lib -DPython3_EXECUTABLE=$HOME/worsica_web-py363_venv/bin/python3 -DPython3_LIBRARIES=/usr/local/pythonz/pythons/CPython-3.6.3/lib -DPython3_INCLUDE_DIRS=/usr/local/pythonz/pythons/CPython-3.6.3/include/python3.6m -DCMAKE_C_FLAGS="-fPIC" \
+#    && make -j \
+#    && make install \    
+#    && cd $HOME/bin/FES2014 \
+#    && mkdir data \
+#    && $HOME/worsica_web-py363_venv/bin/pip3 install uptide \
+
+#Cleanup time
+    && yum clean all --enablerepo='*' \
+    && rm -rf /var/tmp/* \
+    && rm -rf /var/cache/* \
+    && rm -rf ~/.cache/*
+
+COPY . $HOME/worsica_web_products
+
+RUN sed -i 's|http://nextcloud|http://worsica-dev.a.incd.pt:8080|g' $HOME/worsica_web_products/worsica_bash_common.sh \
+    && sed -i 's|http://nextcloud|http://worsica-dev.a.incd.pt:8080|g' $HOME/worsica_web_products/worsica_bash_common_uc.sh \
+    && sed -i 's|max-time 60|max-time 600|g' $HOME/worsica_web_products/worsica_bash_common.sh \
+    && sed -i 's|max-time 60|max-time 600|g' $HOME/worsica_web_products/worsica_bash_common_uc.sh
+    
+#Remove unneeded files for the image
+RUN rm -rf coastal/ \ 
+    && rm -rf inland/ \
+    && rm -rf waterleak/ \
+    && rm -rf teste_subpixel/ \
+    && rm -rf _old/ \
+    && rm -rf .git* \
+    && rm -rf *.zip \
+    && rm -rf **/*.pyc \
+    && rm -rf log/* \
+    && rm -rf grid/filesubs/* \
+    && rm -rf grid/jobids/* 
+
+#set the path enviroment variable and the cwd
+WORKDIR /usr/local/worsica_web_products
+

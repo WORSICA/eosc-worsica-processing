@@ -1,0 +1,18 @@
+1- Test downloading
+./worsica_downloading_service_v2.sh coastal 999 999 999 submitted b8ca9170-e895-4b2e-b866-ab71fc2c5dbc S2A_MSIL2A_20200929T113321_N0214_R080_T29TME_20200929T143142
+./worsica_downloading_service_v2.sh coastal 999 999 999 submitted 1a7ef827-1c00-4635-9662-26894b9bf53c S2A_MSIL2A_20200929T113321_N0214_R080_T29TNE_20200929T143142
+
+2- Test Resampling
+./worsica_resampling_service_v2.sh coastal 999 999 999 downloaded S2A_MSIL2A_20200929T113321_N0214_R080_T29TME_20200929T143142 S2A_MSIL2A_20200929T113321_N0214_R080_T29TME_20200929T143142 "POLYGON ((-8.666191 40.278321,-9.083672 40.278321,-9.083672 39.959070,-8.666191 39.959070,-8.666191 40.278321))"
+./worsica_resampling_service_v2.sh coastal 999 999 999 downloaded S2A_MSIL2A_20200929T113321_N0214_R080_T29TNE_20200929T143142 S2A_MSIL2A_20200929T113321_N0214_R080_T29TNE_20200929T143142 "POLYGON ((-8.666191 40.278321,-9.083672 40.278321,-9.083672 39.959070,-8.666191 39.959070,-8.666191 40.278321))"
+
+./worsica_resampling_service_upload_v2.sh coastal 1 999 999 uploaded uploaded-user1_rgba uploaded-user1_rgba "POLYGON ((-8.666191 40.278321,-9.083672 40.278321,-9.083672 39.959070,-8.666191 39.959070,-8.666191 40.278321))" "redband=1;greenband=2;blueband=3;nirband=4"
+./worsica_resampling_service_upload_v2.sh coastal 1 999 999 uploaded uploaded-user1_rgba uploaded-user1_rgba "POLYGON ((-9.261131 39.383141,-9.261131 39.453161,-9.174271 39.453161,-9.174271 39.383141,-9.261131 39.383141))" "redband=1;greenband=2;blueband=3;nirband=4"
+
+3- Test Merging
+./worsica_merging_service_v2.sh coastal 999 999 999 resampled S2A_MSIL2A_20200929T113321_N0214_R080_T29TME_20200929T143142,S2A_MSIL2A_20200929T113321_N0214_R080_T29TNE_20200929T143142 merged_resampled_20200929
+
+./worsica_merging_service_v2.sh coastal 1 999 999 resampled uploaded-user1_rgba merged_resampled_20200929
+
+4- test processing
+./worsica_processing_service_v2.sh coastal 999 999 999 merged merged_resampled_20200929 merged_resampled_20200929 -10 10 0.3,AUTO 'ndwi,mndwi'
