@@ -285,7 +285,7 @@ def worsicaResampling(procDicts, mode='normal'):
                     print('NUM_THREADS=' + NUM_THREADS)
                     ds3 = gdal.Open(fout_wrap, gdal.GA_Update)
                     ds1 = None
-                    BandsRGBTranslate={}
+                    BandsRGBTranslate = {}
                     for bL in bandsList:
                         b = bL.split('=')
                         ds3b = ds3.GetRasterBand(int(b[1]))

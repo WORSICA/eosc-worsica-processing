@@ -79,9 +79,6 @@ def run_script(args):
 
         if (args[3] in ['coastal', 'inland']):
             bands = [3, 2, 1]
-            #if 'uploaded-user' in inputImagesForMerge:
-            #    print('Has user uploaded images, invert band order')
-            #    bands = [1, 2, 3]
             print(bands)
             print('---------------------------------------------')
             print('-- RGB for ' + args[2] + ' --')
